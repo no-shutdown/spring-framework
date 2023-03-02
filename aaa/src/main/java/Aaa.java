@@ -8,9 +8,11 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  */
 public class Aaa {
 	public static void main(String[] args) {
-		AnnotationConfigApplicationContext annotationContext = new AnnotationConfigApplicationContext(AppConfig.class);
+//		AnnotationConfigApplicationContext annotationContext = new AnnotationConfigApplicationContext(AppConfig.class);
+//		System.out.println(annotationContext.getBean("user"));
 
 
-		ClassPathXmlApplicationContext xmlContext = new ClassPathXmlApplicationContext();
+		ClassPathXmlApplicationContext xmlContext = new ClassPathXmlApplicationContext("spring.xml");
+		System.out.println(xmlContext.getBean("xmlUser"));
 	}
 }
