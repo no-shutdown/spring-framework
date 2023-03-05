@@ -508,16 +508,14 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 		RootBeanDefinition mbdToUse = mbd;
 
-		// Make sure bean class is actually resolved at this point, and
-		// clone the bean definition in case of a dynamically resolved Class
-		// which cannot be stored in the shared merged bean definition.
+		//锁定class，根据设置的class属性或者根据calssName属性来解析class
 		Class<?> resolvedClass = resolveBeanClass(mbd, beanName);
 		if (resolvedClass != null && !mbd.hasBeanClass() && mbd.getBeanClassName() != null) {
 			mbdToUse = new RootBeanDefinition(mbd);
 			mbdToUse.setBeanClass(resolvedClass);
 		}
 
-		// Prepare method overrides.
+		//指定方法的覆盖（对lookup-method和replace-method属性的处理）
 		try {
 			mbdToUse.prepareMethodOverrides();
 		}
@@ -527,7 +525,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		try {
-			// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
+			//初始化前PostProcessor（InstantiationAwareBeanPostProcessor.postProcessBeforeInstantiation）
+			//postProcessBeforeInstantiation若是返回了一个bean，则表示这个bean已被创建（代理创建）
+			//此时会直接调用所有PostProcessors.applyBeanPostProcessorsAfterInitialization然后返回创建的bean
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
 			if (bean != null) {
 				return bean;
@@ -539,6 +539,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		try {
+			//真正的创建bean
 			Object beanInstance = doCreateBean(beanName, mbdToUse, args);
 			if (logger.isTraceEnabled()) {
 				logger.trace("Finished creating instance of bean '" + beanName + "'");
@@ -546,8 +547,6 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			return beanInstance;
 		}
 		catch (BeanCreationException | ImplicitlyAppearedSingletonException ex) {
-			// A previously detected exception with proper bean creation context already,
-			// or illegal singleton state to be communicated up to DefaultSingletonBeanRegistry.
 			throw ex;
 		}
 		catch (Throwable ex) {
@@ -573,11 +572,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	protected Object doCreateBean(String beanName, RootBeanDefinition mbd, @Nullable Object[] args)
 			throws BeanCreationException {
 
-		// Instantiate the bean.
+		//如果是单例，factoryBeanCache.remove
 		BeanWrapper instanceWrapper = null;
 		if (mbd.isSingleton()) {
 			instanceWrapper = this.factoryBeanInstanceCache.remove(beanName);
 		}
+
+		//实例化bean
 		if (instanceWrapper == null) {
 			instanceWrapper = createBeanInstance(beanName, mbd, args);
 		}
@@ -587,7 +588,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			mbd.resolvedTargetType = beanType;
 		}
 
-		// Allow post-processors to modify the merged bean definition.
+		//MergedBeanDefinitionPostProcessor的应用（如：AutowiredAnnotationBeanPostProcessor）
 		synchronized (mbd.postProcessingLock) {
 			if (!mbd.postProcessed) {
 				try {
@@ -601,8 +602,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}
 		}
 
-		// Eagerly cache singletons to be able to resolve circular references
-		// even when triggered by lifecycle interfaces like BeanFactoryAware.
+		//提前暴露bean，循环依赖处理
 		boolean earlySingletonExposure = (mbd.isSingleton() && this.allowCircularReferences &&
 				isSingletonCurrentlyInCreation(beanName));
 		if (earlySingletonExposure) {
@@ -613,10 +613,15 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
 		}
 
-		// Initialize the bean instance.
 		Object exposedObject = bean;
 		try {
+			//属性填充
+			//填充属性之前会调用 InstantiationAwareBeanPostProcessor.postProcessAfterInstantiation
+			//填充属性之后会调用 InstantiationAwareBeanPostProcessor.postProcessProperties --如果返回null--> postProcessPropertyValues
 			populateBean(beanName, mbd, instanceWrapper);
+			//初始化bean（是指据配置自定义的初始化bean如：@PostConstruct，而不是指构造方法的初始化）
+			//初始化之前会调用 PostProcessors.postProcessBeforeInitialization
+			//初始化之后会调用 PostProcessors.postProcessAfterInstantiation
 			exposedObject = initializeBean(beanName, exposedObject, mbd);
 		}
 		catch (Throwable ex) {
@@ -629,6 +634,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}
 		}
 
+		//循环依赖检查，判断是否需要抛出异常
 		if (earlySingletonExposure) {
 			Object earlySingletonReference = getSingleton(beanName, false);
 			if (earlySingletonReference != null) {
@@ -656,7 +662,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}
 		}
 
-		// Register bean as disposable.
+		//注册DisposableBean，如果配置了destroy-methoy，这里需要注册以便于在销毁的时候调用
 		try {
 			registerDisposableBeanIfNecessary(beanName, bean, mbd);
 		}
@@ -1781,6 +1787,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * @see #applyBeanPostProcessorsAfterInitialization
 	 */
 	protected Object initializeBean(String beanName, Object bean, @Nullable RootBeanDefinition mbd) {
+		//aware方法的执行（beanNameAware，beanClassLoaderAware，beanFactoryAware）
 		if (System.getSecurityManager() != null) {
 			AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
 				invokeAwareMethods(beanName, bean);
@@ -1791,11 +1798,15 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			invokeAwareMethods(beanName, bean);
 		}
 
+		//PostProcessors的postProcessBeforeInitialization方法执行
 		Object wrappedBean = bean;
 		if (mbd == null || !mbd.isSynthetic()) {
 			wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
 		}
 
+		//执行自定义的init方法
+		//1、InitializingBean.afterPropertiesSet
+		//2、@PostConstruct、init-method
 		try {
 			invokeInitMethods(beanName, wrappedBean, mbd);
 		}
@@ -1804,6 +1815,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					(mbd != null ? mbd.getResourceDescription() : null),
 					beanName, "Invocation of init method failed", ex);
 		}
+
+		//PostProcessors的postProcessAfterInitialization方法执行
 		if (mbd == null || !mbd.isSynthetic()) {
 			wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
 		}
