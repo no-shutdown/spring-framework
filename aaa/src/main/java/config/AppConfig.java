@@ -1,7 +1,8 @@
 package config;
 
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
+import entity.BeanUser;
+import pojo.ImportUser;
+import org.springframework.context.annotation.*;
 
 /**
  * @author xinLin.huang
@@ -9,8 +10,20 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ComponentScan(value = {"entity"})
+@Import({ImportUser.class, ImportConfig.class})
+@PropertySource("classpath:myProperties.yml")
 public class AppConfig {
 
+	@Bean
+	public BeanUser user() {
+		return new BeanUser();
+	}
 
 
+	public class ImportMemberConfig {
+		@Bean
+		public BeanUser user2() {
+			return new BeanUser();
+		}
+	}
 }
