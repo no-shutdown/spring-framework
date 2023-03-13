@@ -1,4 +1,5 @@
 import config.AppConfig;
+import entity.ComponentUser;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -9,8 +10,10 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 public class Aaa {
 	public static void main(String[] args) {
 		AnnotationConfigApplicationContext annotationContext = new AnnotationConfigApplicationContext(AppConfig.class);
-		System.out.println(annotationContext.getBean("user"));
-		System.out.println(annotationContext.getBean("componentUser"));
-		System.out.println(annotationContext.getBean("importUser"));
+		ComponentUser componentUser = annotationContext.getBean("componentUser", ComponentUser.class);
+		System.out.println(componentUser);
+
+//		ClassPathXmlApplicationContext xmlContext = new ClassPathXmlApplicationContext("spring.xml");
+
 	}
 }

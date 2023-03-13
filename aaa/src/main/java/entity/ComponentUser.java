@@ -1,5 +1,6 @@
 package entity;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -8,4 +9,12 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class ComponentUser {
+
+	private BeanUser user;
+
+	@Autowired
+	public void setUser(BeanUser user) {
+		System.out.println("set");
+		this.user = user;
+	}
 }
