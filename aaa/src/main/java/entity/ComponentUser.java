@@ -10,11 +10,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class ComponentUser {
 
-	private BeanUser user;
-
-	@Autowired
-	public void setUser(BeanUser user) {
-		System.out.println("set");
-		this.user = user;
-	}
+//	private BeanUser user;
+//
+//	@Autowired
+//	public void setUser(BeanUser user) {
+//		System.out.println("set");
+//		this.user = user;
+//	}
 }

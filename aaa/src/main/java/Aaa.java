@@ -9,11 +9,11 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  */
 public class Aaa {
 	public static void main(String[] args) {
-		AnnotationConfigApplicationContext annotationContext = new AnnotationConfigApplicationContext(AppConfig.class);
-		ComponentUser componentUser = annotationContext.getBean("componentUser", ComponentUser.class);
-		System.out.println(componentUser);
+//		AnnotationConfigApplicationContext annotationContext = new AnnotationConfigApplicationContext(AppConfig.class);
+//		ComponentUser componentUser = annotationContext.getBean("componentUser", ComponentUser.class);
+//		System.out.println(componentUser);
 
-//		ClassPathXmlApplicationContext xmlContext = new ClassPathXmlApplicationContext("spring.xml");
+		ClassPathXmlApplicationContext xmlContext = new ClassPathXmlApplicationContext("spring.xml");
 
 	}
 }
