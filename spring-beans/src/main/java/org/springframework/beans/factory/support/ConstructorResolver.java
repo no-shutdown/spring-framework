@@ -176,7 +176,7 @@ class ConstructorResolver {
 				}
 			}
 
-			//如果只有一个无参构造且没有传递参数则用无参构造
+			//如果只有一个候选构造且无参数且没有传递参数则用该构造
 			if (candidates.length == 1 && explicitArgs == null && !mbd.hasConstructorArgumentValues()) {
 				Constructor<?> uniqueCandidate = candidates[0];
 				if (uniqueCandidate.getParameterCount() == 0) {
@@ -190,6 +190,7 @@ class ConstructorResolver {
 				}
 			}
 
+			//当chosenCtors不为空（有autowire注解或者只有一个有参构造方法）或者指定了constructor模式就表示开启自动注入
 			boolean autowiring = (chosenCtors != null ||
 					mbd.getResolvedAutowireMode() == AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR);
 			ConstructorArgumentValues resolvedValues = null;

@@ -10,19 +10,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class ComponentUser {
 
-	private BeanUser user;
 
 
-	@Autowired(required = true)
-	public ComponentUser(BeanUser user) {
-		System.out.println(1);
-		this.user = user;
-	}
 
-	@Autowired(required = false)
-	public ComponentUser(BeanUser user, BeanUser user3) {
+//	@Autowired（虽然最后都调用无参，但执行逻辑是不一样的）
+	public ComponentUser() {
 
 		System.out.println(2);
-		this.user = user;
 	}
 }

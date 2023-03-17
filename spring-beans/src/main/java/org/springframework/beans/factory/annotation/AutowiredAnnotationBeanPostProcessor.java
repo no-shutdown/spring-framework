@@ -315,9 +315,9 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 					Constructor<?> requiredConstructor = null;
 					//默认构造
 					Constructor<?> defaultConstructor = null;
-					//Kotlin相关的（primaryConstructor java开发一般都是null。不用管）
+					//Kotlin相关的（java开发一般不会用。不用管）
 					Constructor<?> primaryConstructor = BeanUtils.findPrimaryConstructor(beanClass);
-					//记录合成的构造方法数量
+					//记录合成的构造方法数量（java开发一般不会用。不用管）
 					int nonSyntheticConstructors = 0;
 					for (Constructor<?> candidate : rawCandidates) {
 						if (!candidate.isSynthetic()) {
@@ -342,8 +342,9 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 								}
 							}
 						}
-						//如果有@Autowire注解，将其加入合适的构造器列表中。同时如果发现多个required=true的构造器，就报错
+						//如果有@Autowire注解，将其加入合适的构造器列表中
 						if (ann != null) {
+							//如果发现存在required=true且有多个@autowire就报错
 							if (requiredConstructor != null) {
 								throw new BeanCreationException(beanName,
 										"Invalid autowire-marked constructor: " + candidate +
@@ -383,6 +384,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 						candidateConstructors = candidates.toArray(new Constructor<?>[0]);
 					}
 					//只有1个构造方法且参数大于0返回这个构造器
+					// 这种情况返回值不为空createBeanInstance就会走autowireConstructor且会开启自动注入模式
 					else if (rawCandidates.length == 1 && rawCandidates[0].getParameterCount() > 0) {
 						candidateConstructors = new Constructor<?>[] {rawCandidates[0]};
 					}
