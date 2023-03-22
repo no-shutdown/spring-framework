@@ -6,7 +6,7 @@
 
 	<context:component-scan base-package="entity"/>
 	<bean id="comUser" class="entity.ComponentUser"/>
-	<bean id="xmlUser" class="entity.XmlUser">
+	<bean id="xmlUser" class="entity.XmlUser" autowire="constructor">
 		<property name="componentUser" ref="comUser"/>
 	</bean>
 

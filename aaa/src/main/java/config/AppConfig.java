@@ -1,6 +1,7 @@
 package config;
 
 import entity.BeanUser;
+import org.springframework.beans.factory.annotation.Autowire;
 import pojo.ImportUser;
 import org.springframework.context.annotation.*;
 
@@ -14,7 +15,7 @@ import org.springframework.context.annotation.*;
 @PropertySource("classpath:myProperties.yml")
 public class AppConfig {
 
-	@Bean
+	@Bean(autowire = Autowire.BY_NAME)
 	public BeanUser user() {
 		return new BeanUser();
 	}

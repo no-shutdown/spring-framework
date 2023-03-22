@@ -1,6 +1,7 @@
 package entity;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 /**
@@ -10,12 +11,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class ComponentUser {
 
+	@Autowired
+	@Qualifier("user")
+	private BeanUser user;
 
-
-
-//	@Autowired（虽然最后都调用无参，但执行逻辑是不一样的）
-	public ComponentUser() {
-
-		System.out.println(2);
-	}
 }
