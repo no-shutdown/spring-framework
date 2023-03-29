@@ -16,7 +16,9 @@ public class Aaa {
 		BeanDefinition beanDefinition = annotationContext.getBeanDefinition("javaCodingBean");
 		beanDefinition.getPropertyValues().add("attr", 1);
 		JavaCodingBean bean = annotationContext.getBean("javaCodingBean", JavaCodingBean.class);
-		System.out.println(bean.getAttr());
+
+		Object nonFactoryBean = annotationContext.getBean("nonFactoryBean");
+		System.out.println(nonFactoryBean);
 
 
 		ComponentUser componentUser = annotationContext.getBean("componentUser", ComponentUser.class);
