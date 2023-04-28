@@ -1,9 +1,19 @@
 package config;
 
 import entity.BeanUser;
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.mybatis.spring.SqlSessionFactoryBean;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowire;
+import org.springframework.core.io.ClassPathResource;
 import pojo.ImportUser;
 import org.springframework.context.annotation.*;
+
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * @author xinLin.huang
@@ -13,6 +23,7 @@ import org.springframework.context.annotation.*;
 @ComponentScan(value = {"entity"})
 @Import({ImportUser.class, ImportConfig.class})
 @PropertySource("classpath:myProperties.yml")
+@MapperScan(basePackages = {"mapper"})
 public class AppConfig {
 
 	@Bean(autowire = Autowire.BY_NAME)
@@ -27,4 +38,13 @@ public class AppConfig {
 			return new BeanUser();
 		}
 	}
+
+	@Bean
+	public SqlSessionFactoryBean sqlSessionFactoryBean() {
+		SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
+		sqlSessionFactoryBean.setConfigLocation(new ClassPathResource("mybatis-config.xml"));
+		sqlSessionFactoryBean.setDataSource(new DataSource() {});
+		return sqlSessionFactoryBean;
+	}
+
 }
