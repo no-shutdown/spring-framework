@@ -1,9 +1,9 @@
+import aop.AopTarget;
+import aop.advisor.AopAdvisor;
 import config.AppConfig;
-import entity.ComponentUser;
-import entity.JavaCodingBean;
-import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+
 
 /**
  * @author xinLin.huang
@@ -12,21 +12,23 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 public class Aaa {
 	public static void main(String[] args) {
 		AnnotationConfigApplicationContext annotationContext = new AnnotationConfigApplicationContext(AppConfig.class);
-		annotationContext.register(JavaCodingBean.class);
-		BeanDefinition beanDefinition = annotationContext.getBeanDefinition("javaCodingBean");
-		beanDefinition.getPropertyValues().add("attr", 1);
-		JavaCodingBean bean = annotationContext.getBean("javaCodingBean", JavaCodingBean.class);
 
-		Object nonFactoryBean = annotationContext.getBean("nonFactoryBean");
-		System.out.println(nonFactoryBean);
-
-
-		ComponentUser componentUser = annotationContext.getBean("componentUser", ComponentUser.class);
-		System.out.println(componentUser);
-
+		AopTarget proxyTarget = new AopTarget();
+		ProxyFactory proxyFactory = new ProxyFactory();
+		//设置target
+		proxyFactory.setTarget(proxyTarget);
+		//添加advisor
+		proxyFactory.addAdvisor(new AopAdvisor());
+		//得到代理对象
+		AopTarget proxy = (AopTarget) proxyFactory.getProxy();
+		proxy.doAdvisor();
 
 
-//		ClassPathXmlApplicationContext xmlContext = new ClassPathXmlApplicationContext("spring.xml");
+		proxy.doAspect();
+
+
+//		AopTarget aopTarget = annotationContext.getBean(AopTarget.class);
+//		aopTarget.doAspect();
 
 	}
 }
