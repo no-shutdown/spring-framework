@@ -8,7 +8,6 @@ import org.mybatis.spring.transaction.SpringManagedTransactionFactory;
 import org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.beans.factory.annotation.Autowire;
-import pojo.ImportUser;
 import org.springframework.context.annotation.*;
 
 
@@ -18,7 +17,7 @@ import org.springframework.context.annotation.*;
  */
 @Configuration
 @ComponentScan(value = {"entity","aop"})
-@Import({ImportUser.class, ImportConfig.class, DefaultAdvisorAutoProxyCreator.class, AnnotationAwareAspectJAutoProxyCreator.class})
+@Import({DefaultAdvisorAutoProxyCreator.class})
 @PropertySource("classpath:myProperties.yml")
 @MapperScan(basePackages = {"mapper"})
 public class AppConfig {
