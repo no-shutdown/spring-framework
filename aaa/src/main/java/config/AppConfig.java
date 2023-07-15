@@ -5,8 +5,6 @@ import org.apache.ibatis.datasource.pooled.PooledDataSource;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
 import org.mybatis.spring.transaction.SpringManagedTransactionFactory;
-import org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator;
-import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.context.annotation.*;
 
@@ -16,8 +14,7 @@ import org.springframework.context.annotation.*;
  * @date 2023/2/24 18:03
  */
 @Configuration
-@ComponentScan(value = {"entity","aop"})
-@Import({DefaultAdvisorAutoProxyCreator.class})
+@ComponentScan(value = {"entity"})
 @PropertySource("classpath:myProperties.yml")
 @MapperScan(basePackages = {"mapper"})
 public class AppConfig {

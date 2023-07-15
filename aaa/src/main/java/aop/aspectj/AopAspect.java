@@ -14,7 +14,7 @@ public class AopAspect {
 
 
 
-	@Before(value = "execution(public void aop.AopTarget.doAspect())")
+	@Before(value = "execution(public void aop.targetclass.AopTarget.doAspect())")
 	public void before() {
 		System.out.println("aspect before");
 	}
