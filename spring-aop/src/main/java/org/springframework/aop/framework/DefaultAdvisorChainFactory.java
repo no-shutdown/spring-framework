@@ -51,53 +51,62 @@ public class DefaultAdvisorChainFactory implements AdvisorChainFactory, Serializ
 	public List<Object> getInterceptorsAndDynamicInterceptionAdvice(
 			Advised config, Method method, @Nullable Class<?> targetClass) {
 
-		// This is somewhat tricky... We have to process introductions first,
-		// but we need to preserve order in the ultimate list.
 		AdvisorAdapterRegistry registry = GlobalAdvisorAdapterRegistry.getInstance();
 		Advisor[] advisors = config.getAdvisors();
 		List<Object> interceptorList = new ArrayList<>(advisors.length);
 		Class<?> actualClass = (targetClass != null ? targetClass : method.getDeclaringClass());
 		Boolean hasIntroductions = null;
 
+		//分 PointcutAdvisor、IntroductionAdvisor、其他 三个分支
 		for (Advisor advisor : advisors) {
 			if (advisor instanceof PointcutAdvisor) {
-				// Add it conditionally.
+				//PointcutAdvisor分支
 				PointcutAdvisor pointcutAdvisor = (PointcutAdvisor) advisor;
+				//匹配 prefiltered 和 class
 				if (config.isPreFiltered() || pointcutAdvisor.getPointcut().getClassFilter().matches(actualClass)) {
+					//匹配 method
 					MethodMatcher mm = pointcutAdvisor.getPointcut().getMethodMatcher();
 					boolean match;
 					if (mm instanceof IntroductionAwareMethodMatcher) {
+						//如果MethodMatcher是IntroductionAwareMethodMatcher的话，则用IntroductionAwareMethodMatcher.matches
 						if (hasIntroductions == null) {
 							hasIntroductions = hasMatchingIntroductions(advisors, actualClass);
 						}
 						match = ((IntroductionAwareMethodMatcher) mm).matches(method, actualClass, hasIntroductions);
 					}
 					else {
+						//反之直接用MethodMatcher.matches
 						match = mm.matches(method, actualClass);
 					}
 					if (match) {
+						//如果匹配则将 advisor 转化成 MethodInterceptor[]
 						MethodInterceptor[] interceptors = registry.getInterceptors(advisor);
 						if (mm.isRuntime()) {
-							// Creating a new object instance in the getInterceptors() method
-							// isn't a problem as we normally cache created chains.
+							// 如果runtime为true，说明需要根据参数动态匹配，添加 InterceptorAndDynamicMethodMatcher
 							for (MethodInterceptor interceptor : interceptors) {
+								//InterceptorAndDynamicMethodMatcher = MethodInterceptor + MethodMatcher
 								interceptorList.add(new InterceptorAndDynamicMethodMatcher(interceptor, mm));
 							}
 						}
 						else {
+							// 反之直接加到list
 							interceptorList.addAll(Arrays.asList(interceptors));
 						}
 					}
 				}
 			}
 			else if (advisor instanceof IntroductionAdvisor) {
+				//IntroductionAdvisor分支
 				IntroductionAdvisor ia = (IntroductionAdvisor) advisor;
+				//匹配 prefiltered 和 class
 				if (config.isPreFiltered() || ia.getClassFilter().matches(actualClass)) {
+					// 如果匹配 将advisor转成Interceptor[] 放到list
 					Interceptor[] interceptors = registry.getInterceptors(advisor);
 					interceptorList.addAll(Arrays.asList(interceptors));
 				}
 			}
 			else {
+				//其他类型的Advisor分支
 				Interceptor[] interceptors = registry.getInterceptors(advisor);
 				interceptorList.addAll(Arrays.asList(interceptors));
 			}
