@@ -381,7 +381,7 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 
 		//声明式事务
 		if (txAttr == null || !(ptm instanceof CallbackPreferringPlatformTransactionManager)) {
-			// 如果必要的话创建一个新的事务（返回一个挂起资源对象）
+			// 如果必要的话创建一个新的事务（返回一个封装当前事务信息和旧事务信息的对象）
 			TransactionInfo txInfo = createTransactionIfNecessary(ptm, txAttr, joinpointIdentification);
 
 			Object retVal;
@@ -596,7 +596,7 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 		TransactionStatus status = null;
 		if (txAttr != null) {
 			if (tm != null) {
-				//结合隔离级别得到一个事务
+				//结合隔离级别得到一个当前事务状态
 				status = tm.getTransaction(txAttr);
 			}
 			else {
@@ -606,7 +606,7 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 				}
 			}
 		}
-		//准备TransactionInfo
+		//准备 TransactionInfo 封装当前事务和上一个事务
 		return prepareTransactionInfo(tm, txAttr, joinpointIdentification, status);
 	}
 
@@ -689,8 +689,8 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 					throw ex2;
 				}
 			}
+			//不符合回滚条件则提交
 			else {
-				//不符合回滚条件则提交
 				try {
 					txInfo.getTransactionManager().commit(txInfo.getTransactionStatus());
 				}

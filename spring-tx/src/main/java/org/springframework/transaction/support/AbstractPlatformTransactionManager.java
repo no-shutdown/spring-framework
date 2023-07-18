@@ -382,13 +382,15 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 			}
 		}
 
-		//剩下的传播机制创建空事务以非事务运行
+		//剩下的传播机制创建空事务
+		// 空事务可以理解为 存在封装的spring事务即TransactionStatus对象但实际上mysql是非事务运行的
 		else {
 			if (def.getIsolationLevel() != TransactionDefinition.ISOLATION_DEFAULT && logger.isWarnEnabled()) {
 				logger.warn("Custom isolation level specified but no actual transaction initiated; " +
 						"isolation level will effectively be ignored: " + def);
 			}
 			boolean newSynchronization = (getTransactionSynchronization() == SYNCHRONIZATION_ALWAYS);
+			// 封装一个 TransactionStatus 其中 transaction表示此刻的spring事务，newTransaction表示当前spring事务是这个方法新建的（后续会真正提交时会真正commit），
 			return prepareTransactionStatus(def, null, true, newSynchronization, debugEnabled, null);
 		}
 	}
@@ -402,7 +404,7 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 		boolean newSynchronization = (getTransactionSynchronization() != SYNCHRONIZATION_NEVER);
 		DefaultTransactionStatus status = newTransactionStatus(
 				definition, transaction, true, newSynchronization, debugEnabled, suspendedResources);
-		//开启一个数据库事务（autoCommit=false...等）
+		//开启一个数据库事务（执行 set autoCommit=false...等命令）
 		doBegin(transaction, definition);
 		//同步threadLocal
 		prepareSynchronization(status, definition);
@@ -740,6 +742,7 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 				triggerBeforeCompletion(status);
 				beforeCompletionInvoked = true;
 
+				//savePoint
 				if (status.hasSavepoint()) {
 					if (status.isDebug()) {
 						logger.debug("Releasing transaction savepoint");
@@ -747,8 +750,9 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 					unexpectedRollback = status.isGlobalRollbackOnly();
 					status.releaseHeldSavepoint();
 				}
+				//newTransaction为true表示当前这次执行的提交方法是真正需要提交的那次
+				//也就是说只有当当前spring事务是这个方法新建的才真正提交
 				else if (status.isNewTransaction()) {
-					//只有当当前事务是这个方法新建的才真正提交
 					if (status.isDebug()) {
 						logger.debug("Initiating transaction commit");
 					}
@@ -838,13 +842,14 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 			try {
 				triggerBeforeCompletion(status);
 
+				//有 savepoint 就回滚到指定位置（NESTED）
 				if (status.hasSavepoint()) {
-					//savepoint 回滚到指定位置（NESTED）
 					if (status.isDebug()) {
 						logger.debug("Rolling back transaction to savepoint");
 					}
 					status.rollbackToHeldSavepoint();
 				}
+				//如果当前spring事务是该方法新建的就直接回滚
 				else if (status.isNewTransaction()) {
 					if (status.isDebug()) {
 						logger.debug("Initiating transaction rollback");
@@ -852,12 +857,15 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 					doRollback(status);
 				}
 				else {
-					// Participating in larger transaction
+					//如果当前执行方法是公用了一个已经存在的事务，则判断整个事务要不要回滚看具体配置
 					if (status.hasTransaction()) {
+						// 若 rollbackOnly（自己已标记要回滚 默认为false） 或者 globalRollbackOnParticipationFailure（部分失败全局回滚 默认为true）则标记为true
 						if (status.isLocalRollbackOnly() || isGlobalRollbackOnParticipationFailure()) {
 							if (status.isDebug()) {
 								logger.debug("Participating transaction failed - marking existing transaction as rollback-only");
 							}
+							// 标记当前事务状态 rollbackOnly=true 表示需要回滚
+							// 这里只是标记不做真正回滚，真正的回滚是当后续提交的时候会判断这个标记，再进行回滚
 							doSetRollbackOnly(status);
 						}
 						else {
@@ -869,20 +877,22 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 					else {
 						logger.debug("Should roll back transaction but cannot - no transaction available");
 					}
-					// Unexpected rollback only matters here if we're asked to fail early
+					// 是否提前失败
 					if (!isFailEarlyOnGlobalRollbackOnly()) {
 						unexpectedRollback = false;
 					}
 				}
 			}
 			catch (RuntimeException | Error ex) {
+				// 回调 afterCompletion
 				triggerAfterCompletion(status, TransactionSynchronization.STATUS_UNKNOWN);
 				throw ex;
 			}
 
+			// 回调 afterCompletion
 			triggerAfterCompletion(status, TransactionSynchronization.STATUS_ROLLED_BACK);
 
-			// Raise UnexpectedRollbackException if we had a global rollback-only marker
+			// 如果非预期，就直接抛异常中止程序
 			if (unexpectedRollback) {
 				throw new UnexpectedRollbackException(
 						"Transaction rolled back because it has been marked as rollback-only");
