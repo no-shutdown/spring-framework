@@ -106,12 +106,10 @@ public abstract class AbstractFallbackTransactionAttributeSource
 			return null;
 		}
 
-		// First, see if we have a cached value.
+		// 先从缓存中获取
 		Object cacheKey = getCacheKey(method, targetClass);
 		TransactionAttribute cached = this.attributeCache.get(cacheKey);
 		if (cached != null) {
-			// Value will either be canonical value indicating there is no transaction attribute,
-			// or an actual transaction attribute.
 			if (cached == NULL_TRANSACTION_ATTRIBUTE) {
 				return null;
 			}
@@ -120,9 +118,8 @@ public abstract class AbstractFallbackTransactionAttributeSource
 			}
 		}
 		else {
-			// We need to work it out.
+			// 解析事务参数
 			TransactionAttribute txAttr = computeTransactionAttribute(method, targetClass);
-			// Put it in the cache.
 			if (txAttr == null) {
 				this.attributeCache.put(cacheKey, NULL_TRANSACTION_ATTRIBUTE);
 			}
@@ -163,34 +160,34 @@ public abstract class AbstractFallbackTransactionAttributeSource
 	 */
 	@Nullable
 	protected TransactionAttribute computeTransactionAttribute(Method method, @Nullable Class<?> targetClass) {
-		// Don't allow non-public methods, as configured.
+		//如果只允许public方法且当前非public方法则返回null
 		if (allowPublicMethodsOnly() && !Modifier.isPublic(method.getModifiers())) {
 			return null;
 		}
 
-		// The method may be on an interface, but we need attributes from the target class.
-		// If the target class is null, the method will be unchanged.
+		//因为method可能是接口方法，所以这里寻找目标类中，与方法签名最相似的方法
 		Method specificMethod = AopUtils.getMostSpecificMethod(method, targetClass);
 
-		// First try is the method in the target class.
+		// 先在方法上找事务参数
 		TransactionAttribute txAttr = findTransactionAttribute(specificMethod);
 		if (txAttr != null) {
 			return txAttr;
 		}
 
-		// Second try is the transaction attribute on the target class.
+		// 其次在类上找事务参数
 		txAttr = findTransactionAttribute(specificMethod.getDeclaringClass());
+		// 当找到且但方法是用户级方法则返回找到的事务参数
 		if (txAttr != null && ClassUtils.isUserLevelMethod(method)) {
 			return txAttr;
 		}
 
+		//当特定方法找不到事务参数且原始方法和特定方法不相同（如接口形式）
+		// 则跟上面一样先尝试从原始方法后再从类中获取事务参数
 		if (specificMethod != method) {
-			// Fallback is to look at the original method.
 			txAttr = findTransactionAttribute(method);
 			if (txAttr != null) {
 				return txAttr;
 			}
-			// Last fallback is the class of the original method.
 			txAttr = findTransactionAttribute(method.getDeclaringClass());
 			if (txAttr != null && ClassUtils.isUserLevelMethod(method)) {
 				return txAttr;
