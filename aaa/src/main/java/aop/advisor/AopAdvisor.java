@@ -1,6 +1,6 @@
 package aop.advisor;
 
-import aop.AopTarget;
+import aop.targetclass.AopTarget;
 import org.aopalliance.aop.Advice;
 import org.springframework.aop.*;
 import org.springframework.aop.support.RootClassFilter;
