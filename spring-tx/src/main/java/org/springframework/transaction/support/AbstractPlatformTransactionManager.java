@@ -367,7 +367,8 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 		else if (def.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRED ||
 				def.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRES_NEW ||
 				def.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NESTED) {
-			//挂起现在的事务状态（因为当前没有事务，所以这里传null，实际上第一次进入时当前线程中也不可能有事务状态所以什么都不会做）
+			//挂起现在的事务状态（因为当前没有事务，所以这里传null）
+			// 实际上第一次进入时当前线程中也不可能有事务状态所以什么都不会做，除非其他如外部代码手动设值
 			SuspendedResourcesHolder suspendedResources = suspend(null);
 			if (debugEnabled) {
 				logger.debug("Creating new transaction with name [" + def.getName() + "]: " + def);
@@ -711,7 +712,7 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 			return;
 		}
 
-		//判断此时事务之前需要回滚
+		//判断事务是否需要全局回滚
 		if (!shouldCommitOnGlobalRollbackOnly() && defStatus.isGlobalRollbackOnly()) {
 			if (defStatus.isDebug()) {
 				logger.debug("Global transaction is marked as rollback-only but transactional code requested commit");
@@ -742,7 +743,7 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 				triggerBeforeCompletion(status);
 				beforeCompletionInvoked = true;
 
-				//savePoint
+				//savePoint的提交
 				if (status.hasSavepoint()) {
 					if (status.isDebug()) {
 						logger.debug("Releasing transaction savepoint");
@@ -756,16 +757,18 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 					if (status.isDebug()) {
 						logger.debug("Initiating transaction commit");
 					}
+					//一般来说走到这里，GlobalRollbackOnly不可能为true
+					// 除非配置的事务管理器重写了 shouldCommitOnGlobalRollbackOnly 方法返回true，表示就算标记了全局回滚也提交
 					unexpectedRollback = status.isGlobalRollbackOnly();
 					//提交事务
 					doCommit(status);
 				}
+				//如果需要提前终止就可以在这里设置unexpectedRollback后续判断是否抛异常提前终止
 				else if (isFailEarlyOnGlobalRollbackOnly()) {
 					unexpectedRollback = status.isGlobalRollbackOnly();
 				}
 
-				// Throw UnexpectedRollbackException if we have a global rollback-only
-				// marker but still didn't get a corresponding exception from commit.
+				//抛异常非预期回滚
 				if (unexpectedRollback) {
 					throw new UnexpectedRollbackException(
 							"Transaction silently rolled back because it has been marked as rollback-only");
@@ -779,6 +782,7 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 			catch (TransactionException ex) {
 
 				if (isRollbackOnCommitFailure()) {
+					//提交异常就回滚
 					doRollbackOnCommitException(status, ex);
 				}
 				else {
@@ -789,18 +793,20 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 			}
 			catch (RuntimeException | Error ex) {
 				if (!beforeCompletionInvoked) {
+					//回调器完成前
 					triggerBeforeCompletion(status);
 				}
+				//提交异常就回滚
 				doRollbackOnCommitException(status, ex);
 				throw ex;
 			}
 
-			// Trigger afterCommit callbacks, with an exception thrown there
-			// propagated to callers but the transaction still considered as committed.
 			try {
+				//回调器提交后
 				triggerAfterCommit(status);
 			}
 			finally {
+				//回调器完成后
 				triggerAfterCompletion(status, TransactionSynchronization.STATUS_COMMITTED);
 			}
 
@@ -856,15 +862,15 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 					}
 					doRollback(status);
 				}
+				//如果当前执行方法是公用了一个已经存在的事务，则判断整个事务要不要回滚看具体配置
 				else {
-					//如果当前执行方法是公用了一个已经存在的事务，则判断整个事务要不要回滚看具体配置
 					if (status.hasTransaction()) {
-						// 若 rollbackOnly（自己已标记要回滚 默认为false） 或者 globalRollbackOnParticipationFailure（部分失败全局回滚 默认为true）则标记为true
+						// 若 rollbackOnly（特别标记要回滚 默认为false） 或者 globalRollbackOnParticipationFailure（部分失败全局回滚 默认为true）则标记为true
 						if (status.isLocalRollbackOnly() || isGlobalRollbackOnParticipationFailure()) {
 							if (status.isDebug()) {
 								logger.debug("Participating transaction failed - marking existing transaction as rollback-only");
 							}
-							// 标记当前事务状态 rollbackOnly=true 表示需要回滚
+							// 标记当前事务状态 globalRollbackOnly=true 表示需要回滚
 							// 这里只是标记不做真正回滚，真正的回滚是当后续提交的时候会判断这个标记，再进行回滚
 							doSetRollbackOnly(status);
 						}
