@@ -343,7 +343,7 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 
 		TransactionDefinition def = (definition != null ? definition : TransactionDefinition.withDefaults());
 
-		// 新建一个 txObject 维护了 ConnectionHolder
+		// 新建一个 txObject 维护了 ConnectionHolder（数据库连接）
 		Object transaction = doGetTransaction();
 		boolean debugEnabled = logger.isDebugEnabled();
 
@@ -352,7 +352,9 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 			//如果存在则走该分支
 			return handleExistingTransaction(def, transaction, debugEnabled);
 		}
+		//如果不存在走下面的分支
 
+		//检查超时时间配置的合法性
 		if (def.getTimeout() < TransactionDefinition.TIMEOUT_DEFAULT) {
 			throw new InvalidTimeoutException("Invalid transaction timeout", def.getTimeout());
 		}
@@ -452,7 +454,7 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 			}
 		}
 
-		//根据是否使用保存点来 savePoint或直接开启一个新事务 实现嵌套事务
+		//根据是否使用保存点来 savePoint或直接开启一个新事务(不挂起当前状态） 实现嵌套事务
 		if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NESTED) {
 			if (!isNestedTransactionAllowed()) {
 				throw new NestedTransactionNotSupportedException(

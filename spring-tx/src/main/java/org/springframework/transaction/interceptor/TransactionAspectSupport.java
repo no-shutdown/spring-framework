@@ -596,7 +596,7 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 		TransactionStatus status = null;
 		if (txAttr != null) {
 			if (tm != null) {
-				//结合隔离级别得到一个当前事务状态
+				//结合传播级别得到一个当前事务状态
 				status = tm.getTransaction(txAttr);
 			}
 			else {
