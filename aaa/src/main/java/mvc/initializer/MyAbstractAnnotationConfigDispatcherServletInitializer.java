@@ -1,4 +1,4 @@
-package mvc;
+package mvc.initializer;
 
 import mvc.config.MvcConfig;
 import mvc.config.RootConfig;
@@ -21,6 +21,6 @@ public class MyAbstractAnnotationConfigDispatcherServletInitializer extends Abst
 
 	@Override
 	protected String[] getServletMappings() {
-		return new String[]{"/mvc"};
+		return new String[]{"/springmvc/*"};
 	}
 }

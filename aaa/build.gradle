@@ -13,10 +13,9 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":spring-aop"))
-    implementation(project(":spring-context"))
-    implementation(project(":spring-tx"))
-    implementation 'org.springframework:spring-web:5.3.9'
+    implementation "org.springframework:spring-aop:5.3.9"
+    implementation "org.springframework:spring-context:5.3.9"
+    implementation 'org.springframework:spring-tx:5.3.9'
     implementation 'org.springframework:spring-webmvc:5.3.9'
     implementation 'org.apache.tomcat.embed:tomcat-embed-jasper:9.0.62'
     implementation("org.apache.tomcat.embed:tomcat-embed-core:9.0.62")
