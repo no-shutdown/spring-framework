@@ -5,10 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.config.annotation.*;
+import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -34,7 +32,19 @@ public class MvcConfig {
 		public void addInterceptors(InterceptorRegistry registry) {
 			registry.addInterceptor(new MvcInterceptor());
 		}
+
+		@Override
+		public void configureViewResolvers(ViewResolverRegistry registry) {
+			InternalResourceViewResolver viewResolver = new InternalResourceViewResolver();
+			viewResolver.setPrefix("/prefix");
+			viewResolver.setSuffix(".suffix");
+			registry.viewResolver(viewResolver);
+		}
+
+
+
 	}
+
 
 
 

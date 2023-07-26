@@ -46,6 +46,6 @@ public class MvcController {
 
 	@RequestMapping("/test3/mv")
 	public String test3() {
-		return "test";
+		return "redirect:https://www.4399.com";
 	}
 }
