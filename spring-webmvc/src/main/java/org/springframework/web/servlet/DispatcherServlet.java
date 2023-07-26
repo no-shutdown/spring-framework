@@ -1046,7 +1046,7 @@ public class DispatcherServlet extends FrameworkServlet {
 					return;
 				}
 
-				//获取对应的处理器适配器
+				//获取对应的处理器适配器（直接遍历所有适配器，一个一个去匹）
 				HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
 
 				//GET 返回304的那种情况
@@ -1067,9 +1067,11 @@ public class DispatcherServlet extends FrameworkServlet {
 				//实际业务方法
 				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
 
+				//如果是异步处理，返回结果由异步处理完成，直接返回
 				if (asyncManager.isConcurrentHandlingStarted()) {
 					return;
 				}
+
 				//设置一个默认的视图名
 				applyDefaultViewName(processedRequest, mv);
 				//执行获取到的拦截器的后置方法
@@ -1083,7 +1085,7 @@ public class DispatcherServlet extends FrameworkServlet {
 				// making them available for @ExceptionHandler methods and other scenarios.
 				dispatchException = new NestedServletException("Handler dispatch failed", err);
 			}
-			//视图解析器渲染视图（这一步就包括了对视图名前后缀的添加）
+			//解析渲染视图（先根据视图名通过视图解析器得到视图，然后再用model去渲染视图）
 			processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);
 		}
 		catch (Exception ex) {
@@ -1376,7 +1378,7 @@ public class DispatcherServlet extends FrameworkServlet {
 		View view;
 		String viewName = mv.getViewName();
 		if (viewName != null) {
-			// We need to resolve the view name.
+			//视图解析器根据视图名解析视图得到View对象
 			view = resolveViewName(viewName, mv.getModelInternal(), locale, request);
 			if (view == null) {
 				throw new ServletException("Could not resolve view with name '" + mv.getViewName() +
@@ -1392,7 +1394,6 @@ public class DispatcherServlet extends FrameworkServlet {
 			}
 		}
 
-		// Delegate to the View object for rendering.
 		if (logger.isTraceEnabled()) {
 			logger.trace("Rendering view [" + view + "] ");
 		}
