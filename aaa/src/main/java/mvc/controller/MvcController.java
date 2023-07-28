@@ -2,6 +2,7 @@ package mvc.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -21,22 +22,20 @@ public class MvcController {
 	@RequestMapping("/test2/abc??")
 	@ResponseBody
 	public String test2_a() {
-		return "?";
+		return "??";
 	}
 
 	@RequestMapping("/test2/abc{p}")
 	@ResponseBody
 	public String test2_b(@PathVariable String p) {
-		return "p";
+		return "{p}";
 	}
 
 	@RequestMapping("/test2/abc*")
 	@ResponseBody
 	public String test2_c() {
-		return "*";
+		return "abc*";
 	}
-
-
 
 	@RequestMapping("/test2/**")
 	@ResponseBody
@@ -44,8 +43,20 @@ public class MvcController {
 		return "**";
 	}
 
-	@RequestMapping("/test3/mv")
+	@RequestMapping("/test3")
 	public String test3() {
-		return "redirect:https://www.4399.com";
+		return "mv";
+	}
+
+	@RequestMapping("/test4")
+	@ResponseBody
+	public Mode test4(@RequestBody Mode mode) {
+		return mode;
+	}
+
+	public static class Mode {
+		public String a;
+		public String b;
+
 	}
 }

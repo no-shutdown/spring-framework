@@ -4,6 +4,8 @@ import mvc.interceptors.MvcInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.*;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
@@ -12,6 +14,7 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * @author xinLin.huang
@@ -36,11 +39,15 @@ public class MvcConfig {
 		@Override
 		public void configureViewResolvers(ViewResolverRegistry registry) {
 			InternalResourceViewResolver viewResolver = new InternalResourceViewResolver();
-			viewResolver.setPrefix("/prefix");
-			viewResolver.setSuffix(".suffix");
+			viewResolver.setPrefix("/");
+			viewResolver.setSuffix(".html");
 			registry.viewResolver(viewResolver);
 		}
 
+		@Override
+		public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+			converters.add(new MappingJackson2HttpMessageConverter());
+		}
 
 
 	}
