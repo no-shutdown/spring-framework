@@ -1039,14 +1039,14 @@ public class DispatcherServlet extends FrameworkServlet {
 				processedRequest = checkMultipart(request);
 				multipartRequestParsed = (processedRequest != request);
 
-				//获取处理器链（为什么是链？因为可能会有拦截器）
+				//1、获取处理器链（为什么是链？因为可能会有拦截器）
 				mappedHandler = getHandler(processedRequest);
 				if (mappedHandler == null) {
 					noHandlerFound(processedRequest, response);
 					return;
 				}
 
-				//获取对应的处理器适配器（直接遍历所有适配器，一个一个去匹）
+				//2、获取对应的处理器适配器（直接遍历所有适配器，一个一个去匹）
 				HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
 
 				//GET 返回304的那种情况
@@ -1059,12 +1059,12 @@ public class DispatcherServlet extends FrameworkServlet {
 					}
 				}
 
-				//执行获取到的拦截器的前置方法
+				//3、执行获取到的拦截器的前置方法
 				if (!mappedHandler.applyPreHandle(processedRequest, response)) {
 					return;
 				}
 
-				//实际业务方法（包括参数解析器解析参数，结果处理器处理结果）
+				//4、通过处理器适配器执行实际业务方法（包括参数解析器解析参数，结果处理器处理方法返回值）
 				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
 
 				//如果是异步处理，返回结果由异步处理完成，直接返回
@@ -1074,7 +1074,7 @@ public class DispatcherServlet extends FrameworkServlet {
 
 				//设置一个默认的视图名
 				applyDefaultViewName(processedRequest, mv);
-				//执行获取到的拦截器的后置方法
+				//5、执行获取到的拦截器的后置方法
 				mappedHandler.applyPostHandle(processedRequest, response, mv);
 			}
 			catch (Exception ex) {
@@ -1085,7 +1085,7 @@ public class DispatcherServlet extends FrameworkServlet {
 				// making them available for @ExceptionHandler methods and other scenarios.
 				dispatchException = new NestedServletException("Handler dispatch failed", err);
 			}
-			//解析渲染视图（先根据视图名通过视图解析器得到视图，然后再用model去渲染视图）
+			//6、解析渲染视图（先根据视图名通过视图解析器得到视图，然后再用model去渲染视图）
 			processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);
 		}
 		catch (Exception ex) {
