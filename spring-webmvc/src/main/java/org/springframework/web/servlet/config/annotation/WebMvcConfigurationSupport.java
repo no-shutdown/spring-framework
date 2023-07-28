@@ -362,7 +362,9 @@ public class WebMvcConfigurationSupport implements ApplicationContextAware, Serv
 
 		if (this.interceptors == null) {
 			InterceptorRegistry registry = new InterceptorRegistry();
+			//添加自定义的拦截器
 			addInterceptors(registry);
+			//默认添加的拦截器
 			registry.addInterceptor(new ConversionServiceExposingInterceptor(mvcConversionService));
 			registry.addInterceptor(new ResourceUrlProviderExposingInterceptor(mvcResourceUrlProvider));
 			this.interceptors = registry.getInterceptors();
@@ -864,6 +866,7 @@ public class WebMvcConfigurationSupport implements ApplicationContextAware, Serv
 			this.messageConverters = new ArrayList<>();
 			configureMessageConverters(this.messageConverters);
 			if (this.messageConverters.isEmpty()) {
+				//如果没有消息转化器，就添加默认的消息转化器
 				addDefaultHttpMessageConverters(this.messageConverters);
 			}
 			extendMessageConverters(this.messageConverters);
